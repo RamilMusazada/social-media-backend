@@ -50,6 +50,11 @@ public class User implements UserDetails {
 
     public User(){
     }
+    @Column(name = "reset_code")
+    private String resetCode;
+
+    @Column(name = "reset_code_expires_at")
+    private LocalDateTime resetCodeExpiresAt;
 
 
     @Override

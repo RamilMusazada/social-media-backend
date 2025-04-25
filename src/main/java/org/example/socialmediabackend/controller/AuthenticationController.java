@@ -1,8 +1,6 @@
 package org.example.socialmediabackend.controller;
 
-import org.example.socialmediabackend.dto.LoginUserDto;
-import org.example.socialmediabackend.dto.RegisterUserDto;
-import org.example.socialmediabackend.dto.VerifyUserDto;
+import org.example.socialmediabackend.dto.*;
 import org.example.socialmediabackend.model.User;
 import org.example.socialmediabackend.responses.LoginResponse;
 import org.example.socialmediabackend.service.AuthenticationService;
@@ -51,6 +49,25 @@ public class AuthenticationController {
         try {
             authenticationService.resendVerificationCode(email);
             return ResponseEntity.ok("Verification code sent");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDto requestDto) {
+        try {
+            authenticationService.sendPasswordResetEmail(requestDto.getEmail());
+            return ResponseEntity.ok("Password reset code sent to your email");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
+        try {
+            authenticationService.resetPassword(resetPasswordDto);
+            return ResponseEntity.ok("Password reset successful");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
