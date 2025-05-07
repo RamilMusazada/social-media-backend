@@ -14,6 +14,8 @@ public class UserProfileDto {
     private Long id;
     private String username;
     private String email;
+    private String firstName;
+    private String lastName;
     private String bio;
     private String profilePictureUrl;
 
@@ -22,6 +24,8 @@ public class UserProfileDto {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .bio(user.getBio())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .build();

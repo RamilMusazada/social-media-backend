@@ -54,6 +54,14 @@ public class UserService {
             user.setUsername(updateRequest.getUsername());
         }
 
+        if (updateRequest.getFirstName() != null && !updateRequest.getFirstName().isEmpty()) {
+            user.setFirstName(updateRequest.getFirstName());
+        }
+
+        if (updateRequest.getLastName() != null && !updateRequest.getLastName().isEmpty()) {
+            user.setLastName(updateRequest.getLastName());
+        }
+
         if (updateRequest.getBio() != null) {
             user.setBio(updateRequest.getBio());
         }
