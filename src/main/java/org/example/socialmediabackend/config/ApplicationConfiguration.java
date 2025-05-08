@@ -11,18 +11,29 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.logging.Logger;
+
 @Configuration
 public class ApplicationConfiguration {
+    private static final Logger logger = Logger.getLogger(ApplicationConfiguration.class.getName());
     private final UserRepository userRepository;
+
     public ApplicationConfiguration(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Bean
     UserDetailsService userDetailsService() {
-        return username -> userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return username -> {
+            logger.info("Loading UserDetails for: " + username);
+            return userRepository.findByUsername(username)
+                    .orElseThrow(() -> {
+                        logger.warning("User not found with username: " + username);
+                        return new UsernameNotFoundException("User not found with username: " + username);
+                    });
+        };
     }
+
 
     @Bean
     BCryptPasswordEncoder passwordEncoder() {

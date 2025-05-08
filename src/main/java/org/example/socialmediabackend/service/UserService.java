@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 public class UserService {
+    private static final Logger logger = Logger.getLogger(UserService.class.getName());
     private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
@@ -85,7 +87,11 @@ public class UserService {
     }
 
     private User getUserFromUserDetails(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + userDetails.getUsername()));
+        String username = userDetails.getUsername();
+        logger.info("Looking up user with username: " + username);
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
+
 }
