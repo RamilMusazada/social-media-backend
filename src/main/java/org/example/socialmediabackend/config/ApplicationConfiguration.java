@@ -21,7 +21,6 @@ public class ApplicationConfiguration {
     public ApplicationConfiguration(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-
     @Bean
     UserDetailsService userDetailsService() {
         return username -> {

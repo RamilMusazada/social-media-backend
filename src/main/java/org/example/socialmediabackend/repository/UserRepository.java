@@ -16,11 +16,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByVerificationCode(String verificationCode);
     Optional<User> findByUsername(String username);
 
-    @Query("SELECT u FROM User u WHERE " +
-            "(:firstName IS NULL OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :firstName, '%'))) AND " +
-            "(:lastName IS NULL OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))) AND " +
-            "(:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))) AND " +
-            "u.enabled = true")
+    @Query(value = "SELECT * FROM users u WHERE " +
+            "(:firstName IS NULL OR LOWER(CAST(u.first_name AS text)) LIKE LOWER(CONCAT('%', CAST(:firstName AS text), '%'))) AND " +
+            "(:lastName IS NULL OR LOWER(CAST(u.last_name AS text)) LIKE LOWER(CONCAT('%', CAST(:lastName AS text), '%'))) AND " +
+            "(:username IS NULL OR LOWER(CAST(u.username AS text)) LIKE LOWER(CONCAT('%', CAST(:username AS text), '%'))) AND " +
+            "u.enabled = true",
+            nativeQuery = true)
     Page<User> searchUsers(
             @Param("firstName") String firstName,
             @Param("lastName") String lastName,

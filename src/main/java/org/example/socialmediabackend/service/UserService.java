@@ -92,11 +92,11 @@ public class UserService {
     }
 
     private User getUserFromUserDetails(UserDetails userDetails) {
-        String username = userDetails.getUsername();
-        logger.info("Looking up user with username: " + username);
+        String email = userDetails.getUsername();
+        logger.info("Looking up user with email: " + email);
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
     public PaginatedResponseDto<UserProfileDto> searchUsers(String firstName, String lastName, String username, Integer page, Integer size) {
