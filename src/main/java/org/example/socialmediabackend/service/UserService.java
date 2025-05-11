@@ -1,11 +1,15 @@
 package org.example.socialmediabackend.service;
 
+import org.example.socialmediabackend.dto.PaginatedResponseDto;
 import org.example.socialmediabackend.dto.UpdateProfileRequest;
 import org.example.socialmediabackend.dto.UserProfileDto;
 import org.example.socialmediabackend.exception.ResourceNotFoundException;
 import org.example.socialmediabackend.exception.UnauthorizedAccessException;
 import org.example.socialmediabackend.model.User;
 import org.example.socialmediabackend.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -14,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -94,4 +99,24 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 
+    public PaginatedResponseDto<UserProfileDto> searchUsers(String firstName, String lastName, String username, Integer page, Integer size) {
+        int pageNumber = page != null ? page : 0;
+        int pageSize = size != null ? size : 10;
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<User> userPage = userRepository.searchUsers(firstName, lastName, username, pageable);
+
+        List<UserProfileDto> userDtos = userPage.getContent().stream()
+                .map(UserProfileDto::fromUser)
+                .collect(Collectors.toList());
+
+        return new PaginatedResponseDto<>(
+                userDtos,
+                userPage.getNumber(),
+                userPage.getSize(),
+                userPage.getTotalElements(),
+                userPage.getTotalPages(),
+                userPage.isLast()
+        );
+    }
 }

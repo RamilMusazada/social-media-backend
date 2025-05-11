@@ -2,6 +2,7 @@ package org.example.socialmediabackend.controller;
 
 import jakarta.validation.Valid;
 import org.example.socialmediabackend.dto.ApiResponse;
+import org.example.socialmediabackend.dto.PaginatedResponseDto;
 import org.example.socialmediabackend.dto.UpdateProfileRequest;
 import org.example.socialmediabackend.dto.UserProfileDto;
 import org.example.socialmediabackend.service.UserService;
@@ -32,6 +33,20 @@ public class UserController {
     public ResponseEntity<UserProfileDto> getUserProfile(@PathVariable String email) {
         UserProfileDto profile = userService.getUserProfileByEmail(email);
         return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PaginatedResponseDto<UserProfileDto>> searchUsers(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size) {
+
+        PaginatedResponseDto<UserProfileDto> searchResults =
+                userService.searchUsers(firstName, lastName, username, page, size);
+
+        return ResponseEntity.ok(searchResults);
     }
 
     @PutMapping("/me")
