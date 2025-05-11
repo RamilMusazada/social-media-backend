@@ -26,10 +26,10 @@ public class ApplicationConfiguration {
     UserDetailsService userDetailsService() {
         return username -> {
             logger.info("Loading UserDetails for: " + username);
-            return userRepository.findByUsername(username)
+            return userRepository.findByEmail(username)
                     .orElseThrow(() -> {
-                        logger.warning("User not found with username: " + username);
-                        return new UsernameNotFoundException("User not found with username: " + username);
+                        logger.warning("User not found with email: " + username);
+                        return new UsernameNotFoundException("User not found with email: " + username);
                     });
         };
     }
