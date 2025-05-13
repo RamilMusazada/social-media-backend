@@ -40,8 +40,12 @@ public class SecurityConfiguration {
                                 "/api/v1/users/search",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
+                                "/swagger-ui.html",
+                                "/api/v1/follows/stats/**",
+                                "/api/v1/follows/followers/**",
+                                "/api/v1/follows/following/**",
+                                "/api/v1/follows/profile/**"
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
