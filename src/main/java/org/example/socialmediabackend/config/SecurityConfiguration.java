@@ -44,7 +44,10 @@ public class SecurityConfiguration {
                                 "/api/v1/follows/stats/**",
                                 "/api/v1/follows/followers/**",
                                 "/api/v1/follows/following/**",
-                                "/api/v1/follows/profile/**"
+                                "/api/v1/follows/profile/**",
+                                "/api/v1/posts/{postId:^\\d+$}",
+                                "/api/v1/posts/user/**",
+                                "/api/v1/posts"
                                 ).permitAll()
                         .anyRequest().authenticated()
                 )
