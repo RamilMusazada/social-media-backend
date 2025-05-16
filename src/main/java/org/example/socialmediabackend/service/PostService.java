@@ -107,6 +107,48 @@ public class PostService {
         );
     }
 
+
+    public PaginatedResponseDto<PostResponseDto> getFeedPosts(UserDetails userDetails, int page, int size) {
+        User currentUser = getUserFromUserDetails(userDetails);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Post> feedPosts = postRepository.findPostsFromFollowedUsers(currentUser.getId(), pageable);
+
+        List<PostResponseDto> postDtos = feedPosts.getContent().stream()
+                .map(PostResponseDto::fromPost)
+                .collect(Collectors.toList());
+
+        return new PaginatedResponseDto<>(
+                postDtos,
+                feedPosts.getNumber(),
+                feedPosts.getSize(),
+                feedPosts.getTotalElements(),
+                feedPosts.getTotalPages(),
+                feedPosts.isLast()
+        );
+    }
+
+
+    public PaginatedResponseDto<PostResponseDto> getExplorePosts(UserDetails userDetails, int page, int size) {
+        User currentUser = getUserFromUserDetails(userDetails);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Post> explorePosts = postRepository.findPostsExcludingUser(currentUser.getId(), pageable);
+
+        List<PostResponseDto> postDtos = explorePosts.getContent().stream()
+                .map(PostResponseDto::fromPost)
+                .collect(Collectors.toList());
+
+        return new PaginatedResponseDto<>(
+                postDtos,
+                explorePosts.getNumber(),
+                explorePosts.getSize(),
+                explorePosts.getTotalElements(),
+                explorePosts.getTotalPages(),
+                explorePosts.isLast()
+        );
+    }
+
     @Transactional
     public PostResponseDto updatePost(Long postId, UpdatePostDto updatePostDto, UserDetails userDetails) {
         User currentUser = getUserFromUserDetails(userDetails);
@@ -139,7 +181,7 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + postId));
 
-        // Check if the current user is the author of the post
+
         if (!post.getAuthor().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You are not authorized to delete this post");
         }
