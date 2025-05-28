@@ -1,5 +1,6 @@
 package org.example.socialmediabackend.controller;
 
+import org.example.socialmediabackend.dto.ApiResponse;
 import org.example.socialmediabackend.dto.ReactionRequestDto;
 import org.example.socialmediabackend.dto.ReactionResponseDto;
 import org.example.socialmediabackend.service.ReactionService;
@@ -19,29 +20,38 @@ public class ReactionController {
     }
 
     @PostMapping
-    public ResponseEntity<ReactionResponseDto> reactToPost(
+    public ResponseEntity<ApiResponse<ReactionResponseDto>> reactToPost(
             @RequestBody ReactionRequestDto reactionRequestDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-
-        ReactionResponseDto response = reactionService.reactToPost(reactionRequestDto, userDetails);
-        return ResponseEntity.ok(response);
+        try {
+            ReactionResponseDto response = reactionService.reactToPost(reactionRequestDto, userDetails);
+            return ResponseEntity.ok(ApiResponse.success("Reaction added successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<ReactionResponseDto> removeReaction(
+    public ResponseEntity<ApiResponse<ReactionResponseDto>> removeReaction(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-
-        ReactionResponseDto response = reactionService.removeReaction(postId, userDetails);
-        return ResponseEntity.ok(response);
+        try {
+            ReactionResponseDto response = reactionService.removeReaction(postId, userDetails);
+            return ResponseEntity.ok(ApiResponse.success("Reaction removed successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<ReactionResponseDto> getPostReactionDetails(
+    public ResponseEntity<ApiResponse<ReactionResponseDto>> getPostReactionDetails(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-
-        ReactionResponseDto response = reactionService.getPostReactionDetails(postId, userDetails);
-        return ResponseEntity.ok(response);
+        try {
+            ReactionResponseDto response = reactionService.getPostReactionDetails(postId, userDetails);
+            return ResponseEntity.ok(ApiResponse.success("Post reaction details retrieved successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

@@ -19,58 +19,89 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostResponseDto> createPost(
+    public ResponseEntity<ApiResponse<PostResponseDto>> createPost(
             @Valid @RequestBody CreatePostDto createPostDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        PostResponseDto createdPost = postService.createPost(createPostDto, userDetails);
-        return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
+        try {
+            PostResponseDto createdPost = postService.createPost(createPostDto, userDetails);
+            return new ResponseEntity<>(
+                    ApiResponse.success("Post created successfully", createdPost),
+                    HttpStatus.CREATED
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostResponseDto> getPostById(@PathVariable Long postId) {
-        PostResponseDto post = postService.getPostById(postId);
-        return ResponseEntity.ok(post);
+    public ResponseEntity<ApiResponse<PostResponseDto>> getPostById(@PathVariable Long postId) {
+        try {
+            PostResponseDto post = postService.getPostById(postId);
+            return ResponseEntity.ok(ApiResponse.success("Post retrieved successfully", post));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping
-    public ResponseEntity<PaginatedResponseDto<PostResponseDto>> getAllPosts(
+    public ResponseEntity<ApiResponse<PaginatedResponseDto<PostResponseDto>>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        PaginatedResponseDto<PostResponseDto> posts = postService.getAllPosts(page, size);
-        return ResponseEntity.ok(posts);
+        try {
+            PaginatedResponseDto<PostResponseDto> posts = postService.getAllPosts(page, size);
+            return ResponseEntity.ok(ApiResponse.success("Posts retrieved successfully", posts));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/user/{email}")
-    public ResponseEntity<PaginatedResponseDto<PostResponseDto>> getPostsByUser(
+    public ResponseEntity<ApiResponse<PaginatedResponseDto<PostResponseDto>>> getPostsByUser(
             @PathVariable String email,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        PaginatedResponseDto<PostResponseDto> posts = postService.getPostsByUser(email, page, size);
-        return ResponseEntity.ok(posts);
+        try {
+            PaginatedResponseDto<PostResponseDto> posts = postService.getPostsByUser(email, page, size);
+            return ResponseEntity.ok(ApiResponse.success("User posts retrieved successfully", posts));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<PostResponseDto> updatePost(
+    public ResponseEntity<ApiResponse<PostResponseDto>> updatePost(
             @PathVariable Long postId,
             @Valid @RequestBody UpdatePostDto updatePostDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        PostResponseDto updatedPost = postService.updatePost(postId, updatePostDto, userDetails);
-        return ResponseEntity.ok(updatedPost);
+        try {
+            PostResponseDto updatedPost = postService.updatePost(postId, updatePostDto, userDetails);
+            return ResponseEntity.ok(ApiResponse.success("Post updated successfully", updatedPost));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<ApiResponse> deletePost(
+    public ResponseEntity<ApiResponse<Void>> deletePost(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        postService.deletePost(postId, userDetails);
-        return ResponseEntity.ok(ApiResponse.success("Post deleted successfully"));
+        try {
+            postService.deletePost(postId, userDetails);
+            return ResponseEntity.ok(ApiResponse.success("Post deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/{postId}/check-owner")
-    public ResponseEntity<Boolean> isPostOwner(
+    public ResponseEntity<ApiResponse<Boolean>> isPostOwner(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        boolean isOwner = postService.isPostOwner(postId, userDetails);
-        return ResponseEntity.ok(isOwner);
+        try {
+            boolean isOwner = postService.isPostOwner(postId, userDetails);
+            return ResponseEntity.ok(ApiResponse.success("Ownership check completed", isOwner));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

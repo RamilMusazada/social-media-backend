@@ -1,5 +1,6 @@
 package org.example.socialmediabackend.controller;
 
+import org.example.socialmediabackend.dto.ApiResponse;
 import org.example.socialmediabackend.dto.PaginatedResponseDto;
 import org.example.socialmediabackend.dto.PostResponseDto;
 import org.example.socialmediabackend.service.PostService;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 @RequestMapping("/api/v1/posts")
 public class FeedController {
@@ -22,29 +22,31 @@ public class FeedController {
         this.postService = postService;
     }
 
-
     @GetMapping("/feed")
-    public ResponseEntity<PaginatedResponseDto<PostResponseDto>> getFeedPosts(
+    public ResponseEntity<ApiResponse<PaginatedResponseDto<PostResponseDto>>> getFeedPosts(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-
-        PaginatedResponseDto<PostResponseDto> feedPosts =
-                postService.getFeedPosts(userDetails, page, size);
-
-        return ResponseEntity.ok(feedPosts);
+        try {
+            PaginatedResponseDto<PostResponseDto> feedPosts =
+                    postService.getFeedPosts(userDetails, page, size);
+            return ResponseEntity.ok(ApiResponse.success("Feed posts retrieved successfully", feedPosts));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
-
     @GetMapping("/explore")
-    public ResponseEntity<PaginatedResponseDto<PostResponseDto>> getExplorePosts(
+    public ResponseEntity<ApiResponse<PaginatedResponseDto<PostResponseDto>>> getExplorePosts(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-
-        PaginatedResponseDto<PostResponseDto> explorePosts =
-                postService.getExplorePosts(userDetails, page, size);
-
-        return ResponseEntity.ok(explorePosts);
+        try {
+            PaginatedResponseDto<PostResponseDto> explorePosts =
+                    postService.getExplorePosts(userDetails, page, size);
+            return ResponseEntity.ok(ApiResponse.success("Explore posts retrieved successfully", explorePosts));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 }
