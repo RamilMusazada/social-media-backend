@@ -27,13 +27,8 @@ public class FeedController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PaginatedResponseDto<PostResponseDto> feedPosts =
-                    postService.getFeedPosts(userDetails, page, size);
-            return ResponseEntity.ok(ApiResponse.success("Feed posts retrieved successfully", feedPosts));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PaginatedResponseDto<PostResponseDto> feedPosts = postService.getFeedPosts(userDetails, page, size);
+        return ResponseEntity.ok(ApiResponse.success("Feed posts retrieved successfully", feedPosts));
     }
 
     @GetMapping("/explore")
@@ -41,12 +36,7 @@ public class FeedController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PaginatedResponseDto<PostResponseDto> explorePosts =
-                    postService.getExplorePosts(userDetails, page, size);
-            return ResponseEntity.ok(ApiResponse.success("Explore posts retrieved successfully", explorePosts));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PaginatedResponseDto<PostResponseDto> explorePosts = postService.getExplorePosts(userDetails, page, size);
+        return ResponseEntity.ok(ApiResponse.success("Explore posts retrieved successfully", explorePosts));
     }
 }

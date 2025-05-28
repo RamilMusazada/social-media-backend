@@ -22,64 +22,40 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserProfileDto>> register(@Valid @RequestBody RegisterUserDto registerUserDto) {
-        try {
-            User registeredUser = authenticationService.signup(registerUserDto);
-            UserProfileDto userProfile = UserProfileDto.fromUser(registeredUser);
-            return ResponseEntity.ok(ApiResponse.success("User registered successfully", userProfile));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        User registeredUser = authenticationService.signup(registerUserDto);
+        UserProfileDto userProfile = UserProfileDto.fromUser(registeredUser);
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully", userProfile));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> authenticate(@Valid @RequestBody LoginUserDto loginUserDto) {
-        try {
-            User authenticatedUser = authenticationService.authenticate(loginUserDto);
-            String jwtToken = jwtService.generateToken(authenticatedUser);
-            LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
-            return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Authentication failed: " + e.getMessage()));
-        }
+        User authenticatedUser = authenticationService.authenticate(loginUserDto);
+        String jwtToken = jwtService.generateToken(authenticatedUser);
+        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
     }
 
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<Void>> verifyUser(@Valid @RequestBody VerifyUserDto verifyUserDto) {
-        try {
-            authenticationService.verifyUser(verifyUserDto);
-            return ResponseEntity.ok(ApiResponse.success("Account verified successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        authenticationService.verifyUser(verifyUserDto);
+        return ResponseEntity.ok(ApiResponse.success("Account verified successfully"));
     }
 
     @PostMapping("/resend")
     public ResponseEntity<ApiResponse<Void>> resendVerificationCode(@RequestParam String email) {
-        try {
-            authenticationService.resendVerificationCode(email);
-            return ResponseEntity.ok(ApiResponse.success("Verification code sent successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        authenticationService.resendVerificationCode(email);
+        return ResponseEntity.ok(ApiResponse.success("Verification code sent successfully"));
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto requestDto) {
-        try {
-            authenticationService.sendPasswordResetEmail(requestDto.getEmail());
-            return ResponseEntity.ok(ApiResponse.success("Password reset code sent to your email"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        authenticationService.sendPasswordResetEmail(requestDto.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Password reset code sent to your email"));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto) {
-        try {
-            authenticationService.resetPassword(resetPasswordDto);
-            return ResponseEntity.ok(ApiResponse.success("Password reset successful"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        authenticationService.resetPassword(resetPasswordDto);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successful"));
     }
 }

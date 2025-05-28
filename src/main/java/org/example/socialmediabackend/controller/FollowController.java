@@ -21,36 +21,24 @@ public class FollowController {
     public ResponseEntity<ApiResponse<Void>> followUser(
             @RequestBody FollowDto followDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            followService.followUser(followDto.getUserEmail(), userDetails);
-            return ResponseEntity.ok(ApiResponse.success("User followed successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        followService.followUser(followDto.getUserEmail(), userDetails);
+        return ResponseEntity.ok(ApiResponse.success("User followed successfully"));
     }
 
     @PostMapping("/unfollow")
     public ResponseEntity<ApiResponse<Void>> unfollowUser(
             @RequestBody FollowDto followDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            followService.unfollowUser(followDto.getUserEmail(), userDetails);
-            return ResponseEntity.ok(ApiResponse.success("User unfollowed successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        followService.unfollowUser(followDto.getUserEmail(), userDetails);
+        return ResponseEntity.ok(ApiResponse.success("User unfollowed successfully"));
     }
 
     @GetMapping("/stats/{email}")
     public ResponseEntity<ApiResponse<FollowStatsDto>> getFollowStats(
             @PathVariable String email,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            FollowStatsDto stats = followService.getFollowStats(email, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Follow stats retrieved successfully", stats));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        FollowStatsDto stats = followService.getFollowStats(email, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Follow stats retrieved successfully", stats));
     }
 
     @GetMapping("/followers/{email}")
@@ -59,12 +47,8 @@ public class FollowController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            PaginatedResponseDto<UserProfileDto> followers = followService.getFollowers(email, page, size, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Followers retrieved successfully", followers));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PaginatedResponseDto<UserProfileDto> followers = followService.getFollowers(email, page, size, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Followers retrieved successfully", followers));
     }
 
     @GetMapping("/following/{email}")
@@ -73,23 +57,15 @@ public class FollowController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            PaginatedResponseDto<UserProfileDto> following = followService.getFollowing(email, page, size, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Following list retrieved successfully", following));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PaginatedResponseDto<UserProfileDto> following = followService.getFollowing(email, page, size, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Following list retrieved successfully", following));
     }
 
     @GetMapping("/profile/{email}")
     public ResponseEntity<ApiResponse<UserProfileWithFollowDto>> getUserProfileWithFollowStats(
             @PathVariable String email,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            UserProfileWithFollowDto profile = followService.getUserProfileWithFollowStats(email, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("User profile with follow stats retrieved successfully", profile));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        UserProfileWithFollowDto profile = followService.getUserProfileWithFollowStats(email, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("User profile with follow stats retrieved successfully", profile));
     }
 }

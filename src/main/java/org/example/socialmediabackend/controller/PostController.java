@@ -22,37 +22,25 @@ public class PostController {
     public ResponseEntity<ApiResponse<PostResponseDto>> createPost(
             @Valid @RequestBody CreatePostDto createPostDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            PostResponseDto createdPost = postService.createPost(createPostDto, userDetails);
-            return new ResponseEntity<>(
-                    ApiResponse.success("Post created successfully", createdPost),
-                    HttpStatus.CREATED
-            );
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PostResponseDto createdPost = postService.createPost(createPostDto, userDetails);
+        return new ResponseEntity<>(
+                ApiResponse.success("Post created successfully", createdPost),
+                HttpStatus.CREATED
+        );
     }
 
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponseDto>> getPostById(@PathVariable Long postId) {
-        try {
-            PostResponseDto post = postService.getPostById(postId);
-            return ResponseEntity.ok(ApiResponse.success("Post retrieved successfully", post));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PostResponseDto post = postService.getPostById(postId);
+        return ResponseEntity.ok(ApiResponse.success("Post retrieved successfully", post));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponseDto<PostResponseDto>>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PaginatedResponseDto<PostResponseDto> posts = postService.getAllPosts(page, size);
-            return ResponseEntity.ok(ApiResponse.success("Posts retrieved successfully", posts));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PaginatedResponseDto<PostResponseDto> posts = postService.getAllPosts(page, size);
+        return ResponseEntity.ok(ApiResponse.success("Posts retrieved successfully", posts));
     }
 
     @GetMapping("/user/{email}")
@@ -60,12 +48,8 @@ public class PostController {
             @PathVariable String email,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PaginatedResponseDto<PostResponseDto> posts = postService.getPostsByUser(email, page, size);
-            return ResponseEntity.ok(ApiResponse.success("User posts retrieved successfully", posts));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PaginatedResponseDto<PostResponseDto> posts = postService.getPostsByUser(email, page, size);
+        return ResponseEntity.ok(ApiResponse.success("User posts retrieved successfully", posts));
     }
 
     @PutMapping("/{postId}")
@@ -73,35 +57,23 @@ public class PostController {
             @PathVariable Long postId,
             @Valid @RequestBody UpdatePostDto updatePostDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            PostResponseDto updatedPost = postService.updatePost(postId, updatePostDto, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Post updated successfully", updatedPost));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        PostResponseDto updatedPost = postService.updatePost(postId, updatePostDto, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Post updated successfully", updatedPost));
     }
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            postService.deletePost(postId, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Post deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        postService.deletePost(postId, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Post deleted successfully"));
     }
 
     @GetMapping("/{postId}/check-owner")
     public ResponseEntity<ApiResponse<Boolean>> isPostOwner(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            boolean isOwner = postService.isPostOwner(postId, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Ownership check completed", isOwner));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        boolean isOwner = postService.isPostOwner(postId, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Ownership check completed", isOwner));
     }
 }

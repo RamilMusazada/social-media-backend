@@ -23,35 +23,23 @@ public class ReactionController {
     public ResponseEntity<ApiResponse<ReactionResponseDto>> reactToPost(
             @RequestBody ReactionRequestDto reactionRequestDto,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            ReactionResponseDto response = reactionService.reactToPost(reactionRequestDto, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Reaction added successfully", response));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        ReactionResponseDto response = reactionService.reactToPost(reactionRequestDto, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Reaction added successfully", response));
     }
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<ReactionResponseDto>> removeReaction(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            ReactionResponseDto response = reactionService.removeReaction(postId, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Reaction removed successfully", response));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        ReactionResponseDto response = reactionService.removeReaction(postId, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Reaction removed successfully", response));
     }
 
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<ReactionResponseDto>> getPostReactionDetails(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            ReactionResponseDto response = reactionService.getPostReactionDetails(postId, userDetails);
-            return ResponseEntity.ok(ApiResponse.success("Post reaction details retrieved successfully", response));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        ReactionResponseDto response = reactionService.getPostReactionDetails(postId, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("Post reaction details retrieved successfully", response));
     }
 }
