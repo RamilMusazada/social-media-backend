@@ -1,6 +1,7 @@
 package org.example.socialmediabackend.service;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.example.socialmediabackend.dto.ReactionRequestDto;
 import org.example.socialmediabackend.dto.ReactionResponseDto;
 import org.example.socialmediabackend.exception.ResourceNotFoundException;
@@ -14,12 +15,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.logging.Logger;
 
+@Slf4j
 @Service
 public class ReactionService {
-    private static final Logger logger = Logger.getLogger(ReactionService.class.getName());
-
     private final PostReactionRepository reactionRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
@@ -34,91 +33,141 @@ public class ReactionService {
     }
 
     private User getUserFromUserDetails(UserDetails userDetails) {
+        log.info("Getting user from UserDetails");
+
         if (userDetails == null) {
+            log.error("User not authenticated - UserDetails is null");
             throw new IllegalArgumentException("User not authenticated");
         }
 
-        String email = userDetails.getUsername();
-        logger.info("Looking up user with email: " + email);
+        try {
+            String email = userDetails.getUsername();
+            log.info("Looking up user with email: {}", email);
 
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+            log.info("Successfully retrieved user with email: {}", email);
+            return user;
+        } catch (Exception e) {
+            log.error("Failed to get user from UserDetails", e);
+            throw e;
+        }
     }
 
     @Transactional
     public ReactionResponseDto reactToPost(ReactionRequestDto reactionRequestDto, UserDetails userDetails) {
-        User currentUser = getUserFromUserDetails(userDetails);
-        Post post = postRepository.findById(reactionRequestDto.getPostId())
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + reactionRequestDto.getPostId()));
+        log.info("Processing reaction to post ID: {} with reaction type: {}",
+                reactionRequestDto.getPostId(), reactionRequestDto.getReactionType());
 
-        Optional<PostReaction> existingReaction = reactionRepository.findByPostAndUser(post, currentUser);
+        try {
+            User currentUser = getUserFromUserDetails(userDetails);
+            Post post = postRepository.findById(reactionRequestDto.getPostId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + reactionRequestDto.getPostId()));
 
-        PostReaction reaction;
-        if (existingReaction.isPresent()) {
-            if (existingReaction.get().getReactionType() == reactionRequestDto.getReactionType()) {
-                reactionRepository.delete(existingReaction.get());
-                logger.info("Removed " + reactionRequestDto.getReactionType() +
-                        " reaction on post: " + post.getId() +
-                        " by user: " + currentUser.getEmail());
+            Optional<PostReaction> existingReaction = reactionRepository.findByPostAndUser(post, currentUser);
 
-                return getReactionCounts(post.getId(), currentUser.getId());
+            PostReaction reaction;
+            if (existingReaction.isPresent()) {
+                if (existingReaction.get().getReactionType() == reactionRequestDto.getReactionType()) {
+                    reactionRepository.delete(existingReaction.get());
+                    log.info("Removed {} reaction on post: {} by user: {}",
+                            reactionRequestDto.getReactionType(), post.getId(), currentUser.getEmail());
+
+                    ReactionResponseDto response = getReactionCounts(post.getId(), currentUser.getId());
+                    log.info("Successfully processed reaction removal for post ID: {}", post.getId());
+                    return response;
+                }
+                else {
+                    reaction = existingReaction.get();
+                    reaction.setReactionType(reactionRequestDto.getReactionType());
+                    log.info("Updated reaction to {} on post: {} by user: {}",
+                            reactionRequestDto.getReactionType(), post.getId(), currentUser.getEmail());
+                }
+            } else {
+                reaction = PostReaction.builder()
+                        .post(post)
+                        .user(currentUser)
+                        .reactionType(reactionRequestDto.getReactionType())
+                        .build();
+                log.info("Added new {} reaction on post: {} by user: {}",
+                        reactionRequestDto.getReactionType(), post.getId(), currentUser.getEmail());
             }
-            else {
-                reaction = existingReaction.get();
-                reaction.setReactionType(reactionRequestDto.getReactionType());
-                logger.info("Updated reaction to " + reactionRequestDto.getReactionType() +
-                        " on post: " + post.getId() +
-                        " by user: " + currentUser.getEmail());
-            }
-        } else {
-            reaction = PostReaction.builder()
-                    .post(post)
-                    .user(currentUser)
-                    .reactionType(reactionRequestDto.getReactionType())
-                    .build();
-            logger.info("Added new " + reactionRequestDto.getReactionType() +
-                    " reaction on post: " + post.getId() +
-                    " by user: " + currentUser.getEmail());
+
+            reactionRepository.save(reaction);
+            ReactionResponseDto response = getReactionCounts(post.getId(), currentUser.getId());
+
+            log.info("Successfully processed reaction for post ID: {} by user: {}",
+                    post.getId(), currentUser.getEmail());
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to process reaction to post ID: {}", reactionRequestDto.getPostId(), e);
+            throw e;
         }
-
-        reactionRepository.save(reaction);
-        return getReactionCounts(post.getId(), currentUser.getId());
     }
 
     @Transactional
     public ReactionResponseDto removeReaction(Long postId, UserDetails userDetails) {
-        User currentUser = getUserFromUserDetails(userDetails);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + postId));
+        log.info("Removing reaction from post ID: {}", postId);
 
-        reactionRepository.deleteByPostAndUser(post, currentUser);
-        logger.info("Removed reaction on post: " + postId + " by user: " + currentUser.getEmail());
+        try {
+            User currentUser = getUserFromUserDetails(userDetails);
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + postId));
 
-        return getReactionCounts(postId, currentUser.getId());
+            reactionRepository.deleteByPostAndUser(post, currentUser);
+
+            ReactionResponseDto response = getReactionCounts(postId, currentUser.getId());
+            log.info("Successfully removed reaction on post: {} by user: {}", postId, currentUser.getEmail());
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to remove reaction from post ID: {}", postId, e);
+            throw e;
+        }
     }
 
     public ReactionResponseDto getReactionCounts(Long postId, Long userId) {
-        long likesCount = reactionRepository.countLikesByPostId(postId);
-        long dislikesCount = reactionRepository.countDislikesByPostId(postId);
+        log.info("Getting reaction counts for post ID: {} and user ID: {}", postId, userId);
 
-        Optional<PostReaction.ReactionType> userReaction = reactionRepository
-                .findReactionTypeByPostIdAndUserId(postId, userId);
+        try {
+            long likesCount = reactionRepository.countLikesByPostId(postId);
+            long dislikesCount = reactionRepository.countDislikesByPostId(postId);
 
-        return ReactionResponseDto.builder()
-                .postId(postId)
-                .likesCount(likesCount)
-                .dislikesCount(dislikesCount)
-                .userReaction(userReaction.orElse(null))
-                .build();
+            Optional<PostReaction.ReactionType> userReaction = reactionRepository
+                    .findReactionTypeByPostIdAndUserId(postId, userId);
+
+            ReactionResponseDto response = ReactionResponseDto.builder()
+                    .postId(postId)
+                    .likesCount(likesCount)
+                    .dislikesCount(dislikesCount)
+                    .userReaction(userReaction.orElse(null))
+                    .build();
+
+            log.info("Successfully retrieved reaction counts for post ID: {} (likes: {}, dislikes: {}, user reaction: {})",
+                    postId, likesCount, dislikesCount, userReaction.orElse(null));
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to get reaction counts for post ID: {}", postId, e);
+            throw e;
+        }
     }
 
     public ReactionResponseDto getPostReactionDetails(Long postId, UserDetails userDetails) {
-        User currentUser = getUserFromUserDetails(userDetails);
+        log.info("Getting post reaction details for post ID: {}", postId);
 
-        if (!postRepository.existsById(postId)) {
-            throw new ResourceNotFoundException("Post not found with ID: " + postId);
+        try {
+            User currentUser = getUserFromUserDetails(userDetails);
+
+            if (!postRepository.existsById(postId)) {
+                log.error("Post not found with ID: {}", postId);
+                throw new ResourceNotFoundException("Post not found with ID: " + postId);
+            }
+
+            ReactionResponseDto response = getReactionCounts(postId, currentUser.getId());
+            log.info("Successfully retrieved post reaction details for post ID: {}", postId);
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to get post reaction details for post ID: {}", postId, e);
+            throw e;
         }
-
-        return getReactionCounts(postId, currentUser.getId());
-    }
-}
+    }}
