@@ -1,10 +1,13 @@
 package org.example.socialmediabackend.service;
 
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.socialmediabackend.dto.LoginUserDto;
 import org.example.socialmediabackend.dto.RegisterUserDto;
 import org.example.socialmediabackend.dto.ResetPasswordDto;
 import org.example.socialmediabackend.dto.VerifyUserDto;
+import org.example.socialmediabackend.exception.ResourceNotFoundException;
 import org.example.socialmediabackend.model.User;
 import org.example.socialmediabackend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,27 +19,19 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
 
-    public AuthenticationService(
-            UserRepository userRepository,
-            AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder,
-            EmailService emailService
-    ) {
-        this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.emailService = emailService;
-    }
-
 
     public User signup(RegisterUserDto input) {
+        log.info("Starting user signup for email: {}", input.getEmail());
+
         User user = new User(
                 input.getUsername(),
                 input.getEmail(),
@@ -47,17 +42,25 @@ public class AuthenticationService {
         user.setVerificationCode(generateVerificationCode());
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(false);
+
         sendVerificationEmail(user);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        log.info("Successfully created user account for email: {}", input.getEmail());
+        return savedUser;
     }
 
     public User authenticate(LoginUserDto input) {
+        log.info("Authenticating user with email: {}", input.getEmail());
+
         User user = userRepository.findByEmail(input.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + input.getEmail()));
 
         if (!user.isEnabled()) {
-            throw new RuntimeException("Account not verified. Please verify your account.");
+            log.warn("Authentication failed - account not verified for email: {}", input.getEmail());
+            throw new IllegalStateException("Account not verified. Please verify your account.");
         }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.getEmail(),
@@ -65,43 +68,105 @@ public class AuthenticationService {
                 )
         );
 
+        log.info("Successfully authenticated user with email: {}", input.getEmail());
         return user;
     }
 
     public void verifyUser(VerifyUserDto input) {
+        log.info("Verifying user account for email: {}", input.getEmail());
+
         Optional<User> optionalUser = userRepository.findByEmail(input.getEmail());
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("Verification code has expired");
-            }
-            if (user.getVerificationCode().equals(input.getVerificationCode())) {
-                user.setEnabled(true);
-                user.setVerificationCode(null);
-                user.setVerificationCodeExpiresAt(null);
-                userRepository.save(user);
-            } else {
-                throw new RuntimeException("Invalid verification code");
-            }
-        } else {
-            throw new RuntimeException("User not found");
+        if (optionalUser.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with email: " + input.getEmail());
         }
+
+        User user = optionalUser.get();
+        if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Verification code has expired for email: {}", input.getEmail());
+            throw new IllegalStateException("Verification code has expired");
+        }
+
+        if (!user.getVerificationCode().equals(input.getVerificationCode())) {
+            log.warn("Invalid verification code provided for email: {}", input.getEmail());
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+
+        user.setEnabled(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiresAt(null);
+        userRepository.save(user);
+
+        log.info("Successfully verified user account for email: {}", input.getEmail());
     }
 
     public void resendVerificationCode(String email) {
+        log.info("Resending verification code for email: {}", email);
+
         Optional<User> optionalUser = userRepository.findByEmail(email);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            if (user.isEnabled()) {
-                throw new RuntimeException("Account is already verified");
-            }
-            user.setVerificationCode(generateVerificationCode());
-            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusHours(1));
-            sendVerificationEmail(user);
-            userRepository.save(user);
-        } else {
-            throw new RuntimeException("User not found");
+        if (optionalUser.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with email: " + email);
         }
+
+        User user = optionalUser.get();
+        if (user.isEnabled()) {
+            log.warn("Attempted to resend verification code for already verified account: {}", email);
+            throw new IllegalStateException("Account is already verified");
+        }
+
+        user.setVerificationCode(generateVerificationCode());
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusHours(1));
+        sendVerificationEmail(user);
+        userRepository.save(user);
+
+        log.info("Successfully resent verification code for email: {}", email);
+    }
+
+    public void sendPasswordResetEmail(String email) {
+        log.info("Sending password reset email for: {}", email);
+
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with email: " + email);
+        }
+
+        User user = optionalUser.get();
+        String resetCode = generateVerificationCode();
+        user.setResetCode(resetCode);
+        user.setResetCodeExpiresAt(LocalDateTime.now().plusHours(1));
+
+        sendPasswordResetEmail(user);
+        userRepository.save(user);
+
+        log.info("Successfully sent password reset email for: {}", email);
+    }
+
+    public void resetPassword(ResetPasswordDto resetPasswordDto) {
+        log.info("Resetting password for email: {}", resetPasswordDto.getEmail());
+
+        Optional<User> optionalUser = userRepository.findByEmail(resetPasswordDto.getEmail());
+        if (optionalUser.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with email: " + resetPasswordDto.getEmail());
+        }
+
+        User user = optionalUser.get();
+        if (user.getResetCodeExpiresAt() == null ||
+                user.getResetCodeExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Reset code has expired for email: {}", resetPasswordDto.getEmail());
+            throw new IllegalStateException("Reset code has expired");
+        }
+
+        if (user.getResetCode() == null ||
+                !user.getResetCode().trim().equals(resetPasswordDto.getResetCode().trim())) {
+            log.warn("Invalid reset code provided for email: {}", resetPasswordDto.getEmail());
+            throw new IllegalArgumentException("Invalid reset code");
+        }
+
+        user.setPassword(passwordEncoder.encode(resetPasswordDto.getNewPassword()));
+        user.setResetCode(null);
+        user.setResetCodeExpiresAt(null);
+        userRepository.save(user);
+
+        log.info("Successfully reset password for email: {}", resetPasswordDto.getEmail());
     }
 
     private void sendVerificationEmail(User user) {
@@ -122,49 +187,10 @@ public class AuthenticationService {
 
         try {
             emailService.sendVerificationEmail(user.getEmail(), subject, htmlMessage);
+            log.info("Verification email sent successfully to: {}", user.getEmail());
         } catch (MessagingException e) {
-            e.printStackTrace();
-        }
-    }
-    private String generateVerificationCode() {
-        Random random = new Random();
-        int code = random.nextInt(900000) + 100000;
-        return String.valueOf(code);
-    }
-    public void sendPasswordResetEmail(String email) {
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            String resetCode = generateVerificationCode();
-            user.setResetCode(resetCode);
-            user.setResetCodeExpiresAt(LocalDateTime.now().plusHours(1));
-
-            sendPasswordResetEmail(user);
-            userRepository.save(user);
-        } else {
-            throw new RuntimeException("User not found");
-        }
-    }
-
-    public void resetPassword(ResetPasswordDto resetPasswordDto) {
-        Optional<User> optionalUser = userRepository.findByEmail(resetPasswordDto.getEmail());
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            if (user.getResetCodeExpiresAt() == null ||
-                    user.getResetCodeExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("Reset code has expired");
-            }
-            if (user.getResetCode() != null &&
-                    user.getResetCode().trim().equals(resetPasswordDto.getResetCode().trim())) {
-                user.setPassword(passwordEncoder.encode(resetPasswordDto.getNewPassword()));
-                user.setResetCode(null);
-                user.setResetCodeExpiresAt(null);
-                userRepository.save(user);
-            } else {
-                throw new RuntimeException("Invalid reset code");
-            }
-        } else {
-            throw new RuntimeException("User not found");
+            log.error("Failed to send verification email to: {}", user.getEmail(), e);
+            throw new RuntimeException("Failed to send verification email", e);
         }
     }
 
@@ -187,8 +213,16 @@ public class AuthenticationService {
 
         try {
             emailService.sendVerificationEmail(user.getEmail(), subject, htmlMessage);
+            log.info("Password reset email sent successfully to: {}", user.getEmail());
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.error("Failed to send password reset email to: {}", user.getEmail(), e);
+            throw new RuntimeException("Failed to send password reset email", e);
         }
+    }
+
+    private String generateVerificationCode() {
+        Random random = new Random();
+        int code = random.nextInt(900000) + 100000;
+        return String.valueOf(code);
     }
 }

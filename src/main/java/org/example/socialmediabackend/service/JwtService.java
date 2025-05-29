@@ -28,160 +28,105 @@ public class JwtService {
     public String extractUsername(String token) {
         log.info("Extracting username from JWT token");
 
-        try {
-            String username = extractClaim(token, Claims::getSubject);
-            log.info("Successfully extracted username from token: {}", username);
-            return username;
-        } catch (Exception e) {
-            log.error("Failed to extract username from token", e);
-            throw e;
-        }
+        String username = extractClaim(token, Claims::getSubject);
+        log.info("Successfully extracted username from token: {}", username);
+        return username;
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         log.info("Extracting claim from JWT token");
 
-        try {
-            final Claims claims = extractAllClaims(token);
-            T claim = claimsResolver.apply(claims);
-            log.info("Successfully extracted claim from token");
-            return claim;
-        } catch (Exception e) {
-            log.error("Failed to extract claim from token", e);
-            throw e;
-        }
+        final Claims claims = extractAllClaims(token);
+        T claim = claimsResolver.apply(claims);
+        log.info("Successfully extracted claim from token");
+        return claim;
     }
 
     public String generateToken(UserDetails userDetails) {
         log.info("Generating JWT token for user: {}", userDetails.getUsername());
 
-        try {
-            String token = generateToken(new HashMap<>(), userDetails);
-            log.info("Successfully generated JWT token for user: {}", userDetails.getUsername());
-            return token;
-        } catch (Exception e) {
-            log.error("Failed to generate JWT token for user: {}", userDetails.getUsername(), e);
-            throw e;
-        }
+        String token = generateToken(new HashMap<>(), userDetails);
+        log.info("Successfully generated JWT token for user: {}", userDetails.getUsername());
+        return token;
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         log.info("Generating JWT token with extra claims for user: {}", userDetails.getUsername());
 
-        try {
-            String token = buildToken(extraClaims, userDetails, jwtExpiration);
-            log.info("Successfully generated JWT token with extra claims for user: {}", userDetails.getUsername());
-            return token;
-        } catch (Exception e) {
-            log.error("Failed to generate JWT token with extra claims for user: {}", userDetails.getUsername(), e);
-            throw e;
-        }
+        String token = buildToken(extraClaims, userDetails, jwtExpiration);
+        log.info("Successfully generated JWT token with extra claims for user: {}", userDetails.getUsername());
+        return token;
     }
 
     public long getExpirationTime() {
         log.info("Getting JWT expiration time");
 
-        try {
-            log.info("Successfully retrieved JWT expiration time: {} ms", jwtExpiration);
-            return jwtExpiration;
-        } catch (Exception e) {
-            log.error("Failed to get JWT expiration time", e);
-            throw e;
-        }
+        log.info("Successfully retrieved JWT expiration time: {} ms", jwtExpiration);
+        return jwtExpiration;
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         log.info("Building JWT token for user: {}", userDetails.getUsername());
 
-        try {
-            String token = Jwts
-                    .builder()
-                    .setClaims(extraClaims)
-                    .setSubject(userDetails.getUsername())
-                    .setIssuedAt(new Date(System.currentTimeMillis()))
-                    .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                    .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                    .compact();
+        String token = Jwts
+                .builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
 
-            log.info("Successfully built JWT token for user: {}", userDetails.getUsername());
-            return token;
-        } catch (Exception e) {
-            log.error("Failed to build JWT token for user: {}", userDetails.getUsername(), e);
-            throw e;
-        }
+        log.info("Successfully built JWT token for user: {}", userDetails.getUsername());
+        return token;
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         log.info("Validating JWT token for user: {}", userDetails.getUsername());
 
-        try {
-            final String username = extractUsername(token);
-            boolean isValid = (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        final String username = extractUsername(token);
+        boolean isValid = (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
 
-            log.info("JWT token validation result for user {}: {}", userDetails.getUsername(), isValid);
-            return isValid;
-        } catch (Exception e) {
-            log.error("Failed to validate JWT token for user: {}", userDetails.getUsername(), e);
-            throw e;
-        }
+        log.info("JWT token validation result for user {}: {}", userDetails.getUsername(), isValid);
+        return isValid;
     }
 
     private boolean isTokenExpired(String token) {
         log.info("Checking if JWT token is expired");
 
-        try {
-            boolean expired = extractExpiration(token).before(new Date());
-            log.info("JWT token expiration check result: {}", expired ? "expired" : "valid");
-            return expired;
-        } catch (Exception e) {
-            log.error("Failed to check JWT token expiration", e);
-            throw e;
-        }
+        boolean expired = extractExpiration(token).before(new Date());
+        log.info("JWT token expiration check result: {}", expired ? "expired" : "valid");
+        return expired;
     }
 
     private Date extractExpiration(String token) {
         log.info("Extracting expiration date from JWT token");
 
-        try {
-            Date expiration = extractClaim(token, Claims::getExpiration);
-            log.info("Successfully extracted expiration date from token");
-            return expiration;
-        } catch (Exception e) {
-            log.error("Failed to extract expiration date from token", e);
-            throw e;
-        }
+        Date expiration = extractClaim(token, Claims::getExpiration);
+        log.info("Successfully extracted expiration date from token");
+        return expiration;
     }
 
     private Claims extractAllClaims(String token) {
         log.info("Extracting all claims from JWT token");
 
-        try {
-            Claims claims = Jwts
-                    .parserBuilder()
-                    .setSigningKey(getSignInKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+        Claims claims = Jwts
+                .parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
 
-            log.info("Successfully extracted all claims from token");
-            return claims;
-        } catch (Exception e) {
-            log.error("Failed to extract all claims from token", e);
-            throw e;
-        }
+        log.info("Successfully extracted all claims from token");
+        return claims;
     }
 
     private Key getSignInKey() {
         log.info("Getting signing key for JWT");
 
-        try {
-            byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-            Key key = Keys.hmacShaKeyFor(keyBytes);
-            log.info("Successfully retrieved signing key for JWT");
-            return key;
-        } catch (Exception e) {
-            log.error("Failed to get signing key for JWT", e);
-            throw e;
-        }
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        Key key = Keys.hmacShaKeyFor(keyBytes);
+        log.info("Successfully retrieved signing key for JWT");
+        return key;
     }
 }
