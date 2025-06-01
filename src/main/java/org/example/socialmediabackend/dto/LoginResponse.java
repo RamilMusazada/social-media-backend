@@ -1,4 +1,4 @@
-package org.example.socialmediabackend.responses;
+package org.example.socialmediabackend.dto;
 
 import lombok.Getter;
 import lombok.Setter;

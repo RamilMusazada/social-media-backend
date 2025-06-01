@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
         if (ex.getCause() != null && ex.getCause().getMessage() != null) {
             String causeMessage = ex.getCause().getMessage().toLowerCase();
             if (causeMessage.contains("duplicate") || causeMessage.contains("unique")) {
-                message = "Resource already exists";
+                message = "Already exists";
             } else if (causeMessage.contains("foreign key")) {
                 message = "Referenced resource not found";
             }

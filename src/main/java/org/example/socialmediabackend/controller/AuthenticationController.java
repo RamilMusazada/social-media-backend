@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.socialmediabackend.dto.*;
 import org.example.socialmediabackend.model.User;
-import org.example.socialmediabackend.responses.LoginResponse;
+import org.example.socialmediabackend.dto.LoginResponse;
 import org.example.socialmediabackend.service.AuthenticationService;
 import org.example.socialmediabackend.service.JwtService;
 import org.springframework.http.ResponseEntity;

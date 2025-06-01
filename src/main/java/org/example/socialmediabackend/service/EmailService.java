@@ -2,16 +2,18 @@ package org.example.socialmediabackend.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailService {
-    private JavaMailSender emailSender;
+
+    private final JavaMailSender emailSender;
 
     public void sendVerificationEmail(String to, String subject, String text) throws MessagingException {
         log.info("Sending verification email to: {}", to);

@@ -13,9 +13,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
-    Optional<User> findByVerificationCode(String verificationCode);
-    Optional<User> findByUsername(String username);
-
     @Query(value = "SELECT * FROM users u WHERE " +
             "(:firstName IS NULL OR LOWER(CAST(u.first_name AS text)) LIKE LOWER(CONCAT('%', CAST(:firstName AS text), '%'))) AND " +
             "(:lastName IS NULL OR LOWER(CAST(u.last_name AS text)) LIKE LOWER(CONCAT('%', CAST(:lastName AS text), '%'))) AND " +
